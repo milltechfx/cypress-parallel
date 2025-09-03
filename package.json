@@ -34,6 +34,6 @@
     "yargs": "15.3.1"
   },
   "peerDependencies": {
-    "cypress-multi-reporters": "^2.0.5"
+    "cypress-multi-reporters": "^1.6.0 || ^2.0.0"
   }
 }
