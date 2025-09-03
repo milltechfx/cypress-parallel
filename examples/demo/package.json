@@ -1,0 +1,38 @@
+{
+  "name": "cypress-parallel-demo",
+  "version": "1.0.0",
+  "description": "cypress-parallel Demo Project",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm start --prefix pizza-demo",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --browser chrome --headless",
+    "cy:parallel": "node_modules/.bin/cypress-parallel -s cy:run -t 4 -d 'cypress/e2e/1/*.js'",
+    "cy:parallel:many": "node_modules/.bin/cypress-parallel -s cy:run -t 8 -d 'cypress/e2e/**/*.js'",
+    "cy:parallel:spec": "node_modules/.bin/cypress-parallel -s cy:run -t 2 -d cypress/e2e/1 -r spec",
+    "cy:parallel:junit": "node_modules/.bin/cypress-parallel -s cy:run -t 2 -d cypress/e2e/1 -r mocha-junit-reporter -o 'mochaFile=demo-app/reporting/junit/e2ee-junit-[hash].xml'",
+    "serve-and-test:run": "start-server-and-test start http://localhost:3000 cy:run",
+    "serve-and-test:parallel": "start-server-and-test start http://localhost:3000 cy:parallel",
+    "serve-and-test:parallel:many": "start-server-and-test start http://localhost:3000 cy:parallel:many",
+    "serve-and-test:parallel:some": "start-server-and-test start http://localhost:3000 cy:parallel",
+    "serve-and-test:parallel:spec": "start-server-and-test start http://localhost:3000 cy:parallel:spec",
+    "serve-and-test:parallel:junit": "start-server-and-test start http://localhost:3000 cy:parallel:junit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tnicola/cypress-parallel.git"
+  },
+  "author": "tnicola",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tnicola/cypress-parallel/issues"
+  },
+  "homepage": "https://github.com/tnicola/cypress-parallel#readme",
+  "dependencies": {
+    "cypress": "^14.1.0",
+    "cypress-multi-reporters": "^2.0.5",
+    "cypress-parallel": "file:lib",
+    "mocha-junit-reporter": "^2.2.1",
+    "start-server-and-test": "^2.0.10"
+  }
+}
