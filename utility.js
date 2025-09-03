@@ -22,10 +22,26 @@ function generateWeightsFile(specWeights, totalDuration, totalWeight) {
       (specWeights[spec].time / totalDuration) * totalWeight
     );
   });
-  const weightsJson = JSON.stringify(specWeights);
+  
+  // Load existing weights if file exists
+  let existingWeights = {};
+  try {
+    if (fs.existsSync(settings.weightsJSON)) {
+      const existingContent = fs.readFileSync(settings.weightsJSON, 'utf8');
+      existingWeights = JSON.parse(existingContent);
+      console.log(`Merging with existing weights (${Object.keys(existingWeights).length} existing specs)`);
+    }
+  } catch(e) {
+    console.log('No existing weights file or invalid JSON, starting fresh');
+  }
+  
+  // Merge existing weights with new weights (new weights take precedence)
+  const mergedWeights = { ...existingWeights, ...specWeights };
+  const weightsJson = JSON.stringify(mergedWeights, null, 2);
+  
   try {
     fs.writeFileSync(`${settings.weightsJSON}`, weightsJson, 'utf8');
-    console.log('Weights file generated.')
+    console.log(`Weights file updated: ${Object.keys(specWeights).length} new/updated specs, ${Object.keys(mergedWeights).length} total specs`);
   } catch(e) {
     console.error(e)
   }
