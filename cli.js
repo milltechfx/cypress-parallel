@@ -32,6 +32,24 @@ async function start() {
   cleanResultsPath();
   const testSuitePaths = await getTestSuitePaths();
   const threads = distributeTestsByWeight(testSuitePaths);
+
+  // Log thread distribution statistics
+  console.log(`\n[DISTRIBUTION] Thread allocation summary:`);
+  threads.forEach((thread, index) => {
+    console.log(`  Thread ${index + 1}: ${thread.list.length} test suite(s), weight: ${thread.weight.toFixed(2)}`);
+    if (settings.isVerbose || settings.tagFilterDebug) {
+      thread.list.forEach(suite => {
+        console.log(`    - ${suite}`);
+      });
+    }
+  });
+
+  // Check for idle threads
+  const idleThreads = threads.filter(t => t.list.length === 0);
+  if (idleThreads.length > 0) {
+    console.log(`[WARNING] ${idleThreads.length} thread(s) have no work assigned (idle)`);
+  }
+
   const start = new Date();
   await Promise.all(threads.map(executeThread));
   const end = new Date();

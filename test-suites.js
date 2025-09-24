@@ -3,6 +3,7 @@ const path = require('path');
 const { glob } = require('glob');
 
 const { settings } = require('./settings');
+const FeatureTagParser = require('./lib/featureTagParser');
 
 const getFilePathsByPath = (dir) =>
   fs.readdirSync(dir).reduce((files, file) => {
@@ -32,6 +33,31 @@ async function getTestSuitePaths() {
   if (settings.isVerbose) {
     console.log('Paths to found suites');
     console.log(JSON.stringify(fileList, null, 2));
+  }
+
+  // Apply tag filtering if tags are specified
+  if (settings.tags) {
+    const originalCount = fileList.length;
+    fileList = await filterTestsByTags(fileList, settings.tags);
+
+    // Determine the source of the tags
+    let tagSource = '';
+    // Check if tags came from TAGS environment variable
+    if (settings.tags === process.env.TAGS) {
+      tagSource = '(from TAGS env)';
+    }
+    console.log(`[TAG-FILTER] Tag expression: ${settings.tags} ${tagSource}`);
+    console.log(`[TAG-FILTER] Features after filtering: ${fileList.length} (filtered out ${originalCount - fileList.length} from ${originalCount})`);
+
+    if (fileList.length === 0) {
+      console.error(`[TAG-FILTER] ERROR: No features match tag expression: ${settings.tags}`);
+      process.exit(1);
+    }
+
+    if (settings.isVerbose || settings.tagFilterDebug) {
+      console.log('[TAG-FILTER] Filtered feature list:');
+      fileList.forEach(f => console.log(`  - ${f}`));
+    }
   }
 
   // We can't run more threads than suites
@@ -96,8 +122,39 @@ function distributeTestsByWeight(testSuitePaths) {
   return threads;
 }
 
+/**
+ * Filter test files by Cucumber tag expression
+ * Only applies to .feature files
+ * @param {string[]} filePaths - Array of test file paths
+ * @param {string} tagExpression - Cucumber tag expression
+ * @returns {Promise<string[]>} Filtered array of file paths
+ */
+async function filterTestsByTags(filePaths, tagExpression) {
+  // Separate feature files from other test files
+  const featureFiles = filePaths.filter(f => f.endsWith('.feature'));
+  const nonFeatureFiles = filePaths.filter(f => !f.endsWith('.feature'));
+
+  if (featureFiles.length === 0) {
+    console.log('[TAG-FILTER] No .feature files found, skipping tag filtering');
+    return filePaths; // Return all files if no feature files
+  }
+
+  // Create parser with debug option
+  const parser = new FeatureTagParser({ verbose: settings.tagFilterDebug });
+
+  // Filter feature files by tags
+  console.log(`[TAG-FILTER] Filtering ${featureFiles.length} feature file(s) by tags...`);
+  const filteredFeatures = await parser.filterFeaturesByTags(featureFiles, tagExpression);
+
+  // Combine filtered features with non-feature files
+  const result = [...filteredFeatures, ...nonFeatureFiles];
+
+  return result;
+}
+
 module.exports = {
   getTestSuitePaths,
   distributeTestsByWeight,
-  getMaxPathLenghtFrom
+  getMaxPathLenghtFrom,
+  filterTestsByTags
 };
