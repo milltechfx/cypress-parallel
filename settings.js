@@ -66,6 +66,15 @@ const argv = yargs
     alias: 'w',
     type: 'string',
     description: 'Parallel weights json file'
+  })
+  .option('tags', {
+    type: 'string',
+    description: 'Cucumber tag expression to filter features before distribution'
+  })
+  .option('tagFilterDebug', {
+    type: 'boolean',
+    description: 'Enable verbose logging for tag filtering',
+    default: false
   }).argv;
 
 if (!argv.script) {
@@ -101,7 +110,10 @@ const settings = {
   reporterOptionsPath: argv.reporterOptionsPath,
   script: argv.script,
   strictMode: argv.strictMode,
-  scriptArguments: argv.args ? argv.args.split(' ') : []
+  scriptArguments: argv.args ? argv.args.split(' ') : [],
+  // Use --tags if provided, otherwise check TAGS env variable
+  tags: argv.tags || process.env.TAGS,
+  tagFilterDebug: argv.tagFilterDebug
 };
 
 process.env.CY_PARALLEL_SETTINGS = JSON.stringify(settings);

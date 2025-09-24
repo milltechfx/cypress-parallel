@@ -70,6 +70,12 @@ function createCommandArguments(thread) {
 
   childOptions.push('--reporter', settings.reporterModulePath);
   childOptions.push('--reporter-options', `configFile=${reporterConfigPath}`);
+
+  // Add tags to environment if specified
+  if (settings.tags) {
+    childOptions.push('--env', `tags=${settings.tags}`);
+  }
+
   childOptions.push(...settings.scriptArguments);
 
   return childOptions;
@@ -91,6 +97,7 @@ async function executeThread(thread, index) {
       env: {
         ...process.env,
         CYPRESS_THREAD: (index + 1).toString()
+        // Tags are passed via --env tags= in command arguments
       }
     };
     const child = spawn(packageManager, commandArguments, processOptions);
