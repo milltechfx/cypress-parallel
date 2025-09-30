@@ -3,6 +3,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const FeatureTagParser = require('../lib/featureTagParser');
 
+const consoleLogSpy = jest.spyOn(console, 'log');
+
 describe('FeatureTagParser', () => {
   let parser;
   let tempDir;
@@ -25,6 +27,10 @@ describe('FeatureTagParser', () => {
     try {
       await fs.rmdir(tempDir);
     } catch (e) {}
+  });
+
+  afterAll(() => {
+    consoleLogSpy.mockRestore();
   });
 
   async function createFeatureFile(filename, content) {

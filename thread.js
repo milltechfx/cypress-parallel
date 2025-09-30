@@ -76,6 +76,16 @@ function createCommandArguments(thread) {
     childOptions.push('--env', `tags=${settings.tags}`);
   }
 
+  // Smart browser selection based on tags
+  // Use Electron for @BE tests to avoid Chrome renderer crashes
+  const browser = getBrowserForTags(settings.tags);
+  if (browser) {
+    childOptions.push('--browser', browser);
+    if (settings.isVerbose && settings.tags && /(?:^|\s|,|\(|or\s|and\s)@BE(?:$|\s|,|\)|or\s|and\s)/.test(settings.tags)) {
+      console.log('[cypress-parallel] Detected @BE tag - using Electron browser to avoid Chrome crashes');
+    }
+  }
+
   childOptions.push(...settings.scriptArguments);
 
   return childOptions;
