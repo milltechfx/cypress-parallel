@@ -3,6 +3,9 @@ const fs = require('fs').promises;
 const path = require('path');
 const FeatureTagParser = require('../lib/featureTagParser');
 
+// Increase Jest timeout for file system operations
+jest.setTimeout(30000);
+
 // Expected feature files that should match @BE and not @DEPRECATED and not @CUTOFF
 const EXPECTED_BE_FEATURES = [
   'cypress/e2e/features/ACA/bypassCLS.feature',
@@ -233,25 +236,21 @@ describe('Tag Filtering Regression Tests', () => {
 
       console.log('Parsed expression structure:', JSON.stringify(parsed, null, 2));
 
-      // The parser SHOULD create a nested structure, not treat the right side as a single tag
+      // With greedy regex, the parser creates: (@BE and not @DEPRECATED) and not @CUTOFF
       assert.strictEqual(parsed.type, 'and', 'Root should be AND');
-      assert.strictEqual(parsed.left.type, 'tag', 'Left should be a tag');
-      assert.strictEqual(parsed.left.value, '@BE', 'Left tag should be @BE');
 
-      // The right side should be NOT of another expression
+      // The left side is now nested: @BE and not @DEPRECATED
+      assert.strictEqual(parsed.left.type, 'and', 'Left should be AND');
+      assert.strictEqual(parsed.left.left.type, 'tag', 'Left.left should be a tag');
+      assert.strictEqual(parsed.left.left.value, '@BE', 'Left.left tag should be @BE');
+      assert.strictEqual(parsed.left.right.type, 'not', 'Left.right should be NOT');
+      assert.strictEqual(parsed.left.right.operand.type, 'tag', 'Left.right.operand should be a tag');
+      assert.strictEqual(parsed.left.right.operand.value, '@DEPRECATED', 'Left.right.operand should be @DEPRECATED');
+
+      // The right side should be NOT @CUTOFF
       assert.strictEqual(parsed.right.type, 'not', 'Right should be NOT');
-
-      // The operand of NOT should be another AND expression
-      const innerExpr = parsed.right.operand;
-      if (innerExpr.type === 'tag') {
-        // This is the BUG - it's treating "@DEPRECATED and not @CUTOFF" as a single tag
-        console.error('❌ BUG DETECTED: Parser is treating "@DEPRECATED and not @CUTOFF" as a single tag:', innerExpr.value);
-        assert.fail('Parser incorrectly treats complex expression as single tag');
-      } else {
-        // This is what it SHOULD do
-        assert.strictEqual(innerExpr.type, 'and', 'Inner expression should be AND');
-        assert.strictEqual(innerExpr.left.value, '@DEPRECATED', 'Should have @DEPRECATED');
-      }
+      assert.strictEqual(parsed.right.operand.type, 'tag', 'Right.operand should be a tag');
+      assert.strictEqual(parsed.right.operand.value, '@CUTOFF', 'Right.operand should be @CUTOFF');
     });
 
     it('should correctly evaluate tags against complex expressions', () => {
@@ -284,8 +283,6 @@ describe('Tag Filtering Regression Tests', () => {
 
   describe('Feature file filtering', () => {
     it('should find 211 BE features (excluding deprecated and cutoff)', async function() {
-      this.timeout(30000); // Increase timeout for file system operations
-
       try {
         // Get all feature files
         const { glob } = require('glob');
@@ -336,8 +333,6 @@ describe('Tag Filtering Regression Tests', () => {
     });
 
     it('should correctly handle feature-level vs scenario-level tags', async function() {
-      this.timeout(10000);
-
       // Create test files to demonstrate the issue
       const testDir = path.join(__dirname, 'temp_tag_test');
       await fs.mkdir(testDir, { recursive: true });

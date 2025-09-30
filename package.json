@@ -22,9 +22,12 @@
   "bin": {
     "cypress-parallel": "./cli.js"
   },
+  "scripts": {
+    "test": "jest"
+  },
   "dependencies": {
-    "cli-table3": "^0.6.0",
     "@colors/colors": "^1.5.0",
+    "cli-table3": "^0.6.0",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^10.0.0",
     "glob": "^11.0.1",
@@ -35,5 +38,8 @@
   },
   "peerDependencies": {
     "cypress-multi-reporters": "^1.6.0 || ^2.0.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
   }
 }

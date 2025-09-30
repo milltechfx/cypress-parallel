@@ -69,7 +69,7 @@ Feature: Important tests
       assert.deepStrictEqual(tags, ['@BE', '@Critical']);
     });
 
-    it('should ignore tags not directly above Feature line', async () => {
+    it('should collect all tags before Feature line regardless of gaps', async () => {
       const filePath = await createFeatureFile('separated-tags.feature', `
 @BE
 # This is a comment
@@ -80,8 +80,8 @@ Feature: Important tests
       `);
 
       const tags = await parser.getFeatureTags(filePath);
-      // Only @Critical should be captured (directly above Feature)
-      assert.deepStrictEqual(tags, ['@Critical']);
+      // Now collects ALL tags before Feature line, even with gaps
+      assert.deepStrictEqual(tags, ['@BE', '@Critical']);
     });
 
     it('should handle files without tags', async () => {
