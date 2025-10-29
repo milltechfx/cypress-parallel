@@ -8,6 +8,7 @@ const globEscape = require('glob-escape');
 
 const { settings } = require('./settings');
 const { sleep } = require('./utility');
+const { getBrowserForTags } = require('./lib/browserSelector');
 
 function getPackageManager() {
   const pckManager = isYarn
