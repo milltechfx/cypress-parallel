@@ -15,21 +15,43 @@ const {
 const { executeThread } = require('./thread');
 const { resultsPath } = require('./shared-config');
 
-function cleanResultsPath() { 
+function cleanResultsPath() {
   if(!fs.existsSync(resultsPath)) {
-    fs.mkdirSync(resultsPath, { recursive: true }) 
+    fs.mkdirSync(resultsPath, { recursive: true })
   } else {
     fs.readdir(resultsPath, (err, files) => {
-      if (err) console.log(err); 
+      if (err) console.log(err);
         for (const file of files) {
-          fs.unlink(path.join(resultsPath, file), err => { if (err) console.log(err); }); 
-        } 
+          fs.unlink(path.join(resultsPath, file), err => { if (err) console.log(err); });
+        }
       });
     }
   }
 
+function cleanupWorkerNdjsonFiles() {
+  const cucumberDir = path.join(process.cwd(), 'cucumber');
+
+  if (!fs.existsSync(cucumberDir)) {
+    return;
+  }
+
+  const files = fs.readdirSync(cucumberDir);
+  // Clean up worker files from previous parallel runs (messages-N.ndjson)
+  // These files are created when each worker writes to its own ndjson file
+  const workerFiles = files.filter(f => f.match(/^messages-\d+\.ndjson$/));
+
+  if (workerFiles.length > 0) {
+    console.log(`[cypress-parallel] Cleaning up ${workerFiles.length} stale worker ndjson files...`);
+    workerFiles.forEach(file => {
+      fs.unlinkSync(path.join(cucumberDir, file));
+      console.log(`[cypress-parallel]   Deleted: ${file}`);
+    });
+  }
+}
+
 async function start() {
   cleanResultsPath();
+  cleanupWorkerNdjsonFiles(); // Clean up stale worker files before spawning workers
   const testSuitePaths = await getTestSuitePaths();
   const threads = distributeTestsByWeight(testSuitePaths);
 
