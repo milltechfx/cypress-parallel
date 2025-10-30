@@ -36,13 +36,14 @@ function cleanupWorkerNdjsonFiles() {
   }
 
   const files = fs.readdirSync(cucumberDir);
-  // Clean up worker files from previous parallel runs (messages-N.ndjson)
-  // These files are created when each worker writes to its own ndjson file
-  const workerFiles = files.filter(f => f.match(/^messages-\d+\.ndjson$/));
+  // Clean up all cucumber message files from previous runs:
+  // - messages-N.ndjson (worker files from parallel execution)
+  // - messages.ndjson (merged output from previous run)
+  const ndjsonFiles = files.filter(f => f.match(/^messages(-\d+)?\.ndjson$/));
 
-  if (workerFiles.length > 0) {
-    console.log(`[cypress-parallel] Cleaning up ${workerFiles.length} stale worker ndjson files...`);
-    workerFiles.forEach(file => {
+  if (ndjsonFiles.length > 0) {
+    console.log(`[cypress-parallel] Cleaning up ${ndjsonFiles.length} stale ndjson files...`);
+    ndjsonFiles.forEach(file => {
       fs.unlinkSync(path.join(cucumberDir, file));
       console.log(`[cypress-parallel]   Deleted: ${file}`);
     });
