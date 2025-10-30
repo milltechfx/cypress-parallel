@@ -8,6 +8,7 @@ const globEscape = require('glob-escape');
 
 const { settings } = require('./settings');
 const { sleep } = require('./utility');
+const { getBrowserForTags } = require('./lib/browserSelector');
 
 function getPackageManager() {
   const pckManager = isYarn
@@ -50,7 +51,7 @@ function createReporterConfigFile(path) {
   fs.writeFileSync(path, JSON.stringify(content, null, 2));
 }
 
-function createCommandArguments(thread) {
+function createCommandArguments(thread, index) {
   const specFiles = `${thread.list.map(path => globEscape(path)).join(',')}`;
   const childOptions = [
     'run',
@@ -76,6 +77,14 @@ function createCommandArguments(thread) {
     childOptions.push('--env', `tags=${settings.tags}`);
   }
 
+  // Add per-worker messagesOutput to prevent race conditions with parallel writes
+  // Each worker will write to cucumber/messages-N.ndjson instead of all writing to messages.ndjson
+  // The report generator will merge these files after test execution
+  const workerIndex = index + 1;
+  const messagesOutput = `messagesOutput=cucumber/messages-${workerIndex}.ndjson`;
+  console.log(`[cypress-parallel] Worker ${workerIndex}: Adding env var ${messagesOutput}`);
+  childOptions.push('--env', messagesOutput);
+
   // Smart browser selection based on tags
   // Use Electron for @BE tests to avoid Chrome renderer crashes
   const browser = getBrowserForTags(settings.tags);
@@ -93,7 +102,7 @@ function createCommandArguments(thread) {
 
 async function executeThread(thread, index) {
   const packageManager = getPackageManager();
-  const commandArguments = createCommandArguments(thread);
+  const commandArguments = createCommandArguments(thread, index);
 
   // staggered start (when executed in container with xvfb ends up having a race condition causing intermittent failures)
   await sleep((index +1) * 2000);
