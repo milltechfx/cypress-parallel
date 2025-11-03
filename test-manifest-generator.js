@@ -14,8 +14,8 @@ async function generateTestManifest(testSuitePaths, tagExpression) {
   console.log(`\n[test-manifest] Generating test manifest for ${testSuitePaths.length} specs...`);
 
   // Clean up stale manifest from previous run first
-  const cucumberDir = path.join(process.cwd(), 'cucumber');
-  const manifestPath = path.join(cucumberDir, 'test-manifest.json');
+  const runnerResultsDir = path.join(process.cwd(), 'runner-results');
+  const manifestPath = path.join(runnerResultsDir, 'test-manifest.json');
   if (fs.existsSync(manifestPath)) {
     fs.unlinkSync(manifestPath);
     console.log('[test-manifest] Cleaned up stale manifest from previous run');
@@ -98,9 +98,9 @@ async function generateTestManifest(testSuitePaths, tagExpression) {
     }
   }
 
-  // Write manifest to cucumber directory (reuse paths from cleanup above)
-  if (!fs.existsSync(cucumberDir)) {
-    fs.mkdirSync(cucumberDir, { recursive: true });
+  // Write manifest to runner-results directory (reuse paths from cleanup above)
+  if (!fs.existsSync(runnerResultsDir)) {
+    fs.mkdirSync(runnerResultsDir, { recursive: true });
   }
 
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
