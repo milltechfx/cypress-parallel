@@ -30,6 +30,7 @@
     "cli-table3": "^0.6.0",
     "cross-spawn": "^7.0.3",
     "fs-extra": "^10.0.0",
+    "gherkin-parse": "^1.0.12",
     "glob": "^11.0.1",
     "glob-escape": "^0.0.2",
     "lodash.camelcase": "^4.3.0",

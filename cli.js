@@ -14,6 +14,7 @@ const {
 } = require('./utility');
 const { executeThread } = require('./thread');
 const { resultsPath } = require('./shared-config');
+const { generateTestManifest } = require('./test-manifest-generator');
 
 function cleanResultsPath() { 
   if(!fs.existsSync(resultsPath)) {
@@ -31,6 +32,10 @@ function cleanResultsPath() {
 async function start() {
   cleanResultsPath();
   const testSuitePaths = await getTestSuitePaths();
+
+  // Generate test manifest for validation after test execution
+  await generateTestManifest(testSuitePaths, settings.tags);
+
   const threads = distributeTestsByWeight(testSuitePaths);
 
   // Log thread distribution statistics
