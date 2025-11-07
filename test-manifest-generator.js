@@ -71,17 +71,28 @@ async function generateTestManifest(testSuitePaths, tagExpression) {
             return count + (example.tableBody?.length || 0);
           }, 0);
 
-          // Each example row generates a separate test
-          for (let i = 0; i < exampleCount; i++) {
+          // Handle Scenario Outlines without Examples block
+          // (incorrect Gherkin but Cypress still runs them)
+          if (exampleCount === 0) {
             scenarios.push({
-              name: `${child.name} (example #${i + 1})`,
+              name: child.name,
               line: child.location.line,
               tags: outlineTags,
-              isExample: true
+              isExample: false
             });
+            scenarioCount += 1;
+          } else {
+            // Each example row generates a separate test
+            for (let i = 0; i < exampleCount; i++) {
+              scenarios.push({
+                name: `${child.name} (example #${i + 1})`,
+                line: child.location.line,
+                tags: outlineTags,
+                isExample: true
+              });
+            }
+            scenarioCount += exampleCount;
           }
-
-          scenarioCount += exampleCount;
         }
       });
 
