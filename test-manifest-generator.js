@@ -83,14 +83,36 @@ async function generateTestManifest(testSuitePaths, tagExpression) {
             scenarioCount += 1;
           } else {
             // Each example row generates a separate test
-            for (let i = 0; i < exampleCount; i++) {
-              scenarios.push({
-                name: `${child.name} (example #${i + 1})`,
-                line: child.location.line,
-                tags: outlineTags,
-                isExample: true
+            // Replace parameter placeholders with actual values to match Cypress behavior
+            let rowIndex = 0;
+            (child.examples || []).forEach(exampleBlock => {
+              // Get parameter names from header
+              const paramNames = (exampleBlock.tableHeader?.cells || []).map(cell => cell.value);
+
+              // Process each row
+              (exampleBlock.tableBody || []).forEach(row => {
+                rowIndex++;
+
+                // Get parameter values from this row
+                const paramValues = (row.cells || []).map(cell => cell.value);
+
+                // Replace placeholders in scenario name with actual values
+                let scenarioName = child.name;
+                paramNames.forEach((paramName, idx) => {
+                  const placeholder = `<${paramName}>`;
+                  const value = paramValues[idx] || '';
+                  scenarioName = scenarioName.replace(new RegExp(placeholder, 'g'), value);
+                });
+
+                scenarios.push({
+                  name: scenarioName,
+                  line: child.location.line,
+                  tags: outlineTags,
+                  isExample: true
+                });
               });
-            }
+            });
+
             scenarioCount += exampleCount;
           }
         }
