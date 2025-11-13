@@ -1,6 +1,7 @@
 # Project
 .idea
 .vscode
+.claude
 
 # Node
 node_modules
