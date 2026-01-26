@@ -121,6 +121,7 @@ async function generateTestManifest(testSuitePaths, tagExpression) {
       if (scenarioCount > 0) {
         manifest.specs[normalizedPath] = {
           featureName: gherkinDocument.feature.name,
+          featureTags: featureTags,
           expectedScenarios: scenarioCount,
           scenarios: scenarios
         };
